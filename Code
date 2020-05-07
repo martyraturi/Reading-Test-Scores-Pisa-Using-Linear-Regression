@@ -1,0 +1,67 @@
+#Reading Test Scores(PISA)
+#Problem 1.1 - Dataset size
+#Load the training and testing sets using the read.csv() function, and save them as variables with the names pisaTrain and pisaTest.
+
+pisaTrain <- read.csv(file.choose())
+pisaTest <- read.csv(file.choose())
+##How many students are there in the training set?
+str(pisaTrain)  #Answer : 3663
+
+#Problem 1.2 - Summarizing the dataset
+#Using tapply() on pisaTrain, what is the average reading test score of males and females?
+tapply(pisaTrain$readingScore, pisaTrain$male, mean)
+#Answer Male :483.5325  Female :512.9406
+
+#Problem 1.4 - Removing missing values
+#Linear regression discards observations with missing data, so we will remove all such observations from the training and testing sets. Later in the course, we will learn about imputation, which deals with missing data by filling in missing values with plausible information.
+pisaTrain = na.omit(pisaTrain)
+pisaTest = na.omit(pisaTest)
+#How many observations are now in the training set?
+#Answer : 2414
+#How many observations are now in the testing set?
+#Answer : 990
+
+#Problem 2.1 - Factor variables
+#actor variables are variables that take on a discrete set of values, like the "Region" variable in the WHO dataset from the second lecture of Unit 1. This is an unordered factor because there isn't any natural ordering between the levels. An ordered factor has a natural ordering between the levels (an example would be the classifications "large," "medium," and "small").
+levels(pisaTrain$raceeth)
+
+#Problem 3.1 - Building a model
+#Because the race variable takes on text values, it was loaded as a factor variable when we read in the dataset with read.csv() -- you can see this when you run str(pisaTrain) or str(pisaTest). However, by default R selects the first level alphabetically ("American Indian/Alaska Native") 
+#as the reference level of our factor instead of the most common level ("White"). Set the reference level of the factor by typing the following two lines in your R console:
+
+pisaTrain$raceeth = relevel(pisaTrain$raceeth, "White")
+pisaTest$raceeth = relevel(pisaTest$raceeth, "White")
+
+#Now, build a linear regression model (call it lmScore) using the training set to predict readingScore using all the remaining variables.
+lmScore = lm(readingScore ~ ., data = pisaTrain)
+#What is the Multiple R-squared value of lmScore on the training set?
+summary(lmScore) # Multiple R-squared:  0.3251
+
+#Problem 3.2 - Computing the root-mean squared error of the model
+#What is the training-set root-mean squared error (RMSE) of lmScore?
+SSE = sum(lmScore$residuals^2)
+RMSE = sqrt(SSE/nrow(pisaTrain))
+RMSE #Answer :73.36555
+
+#Problem 4.1 - Predicting on unseen data
+#Using the "predict" function and supplying the "newdata" argument, use the lmScore model to predict the reading scores of students in pisaTest. Call this vector of predictions "predTest". 
+#Do not change the variables in the model (for example, do not remove variables that we found were not significant in the previous part of this problem). Use the summary function to describe the test set predictions.
+predTest = predict(lmScore, newdata = pisaTest)
+
+#What is the range between the maximum and minimum predicted reading score on the test set?
+summary(predTest)
+#637.7 - 353.2 = Answer : 284.5
+
+#Problem 4.2 - Test set SSE and RMSE
+#What is the sum of squared errors (SSE) of lmScore on the testing set?
+SSE2 = sum((predTest - pisaTest$readingScore)^2)
+SSE2   #Answer :5762082
+
+#What is the root-mean squared error (RMSE) of lmScore on the testing set?
+RMSE2 = sqrt(mean((predTest - pisaTest$readingScore)^2))
+RMSE2   #Answer: 76.29079
+
+
+
+
+
